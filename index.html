@@ -481,7 +481,7 @@
 
             <!-- 个人统计 -->
             <div class="personal-stats-section">
-                <h2>👥 个人工作统计</h2>
+                <h2>👥 团队成员工作统计（所有人可见）</h2>
                 <div id="personalStatsList">
                     <div class="empty-state">暂无数据</div>
                 </div>
@@ -489,7 +489,7 @@
 
             <!-- 记录列表 -->
             <div class="records-section">
-                <h2>📋 打卡记录</h2>
+                <h2>📋 所有打卡记录（团队共享）</h2>
                 <div id="recordsList" class="loading">正在加载数据...</div>
             </div>
         </div>
@@ -688,6 +688,30 @@
             }
         }
 
+        // 编辑记录
+        function editRecord(recordId) {
+            const record = allRecords[recordId];
+            if (!record) {
+                alert('记录不存在！');
+                return;
+            }
+
+            // 填充表单
+            document.getElementById('userName').value = record.userName;
+            document.getElementById('punchDate').value = record.date;
+            document.getElementById('checkIn').value = record.checkIn;
+            document.getElementById('checkOut').value = record.checkOut;
+            document.getElementById('isHoliday').checked = record.isHoliday;
+
+            // 滚动到表单位置
+            document.querySelector('.punch-section').scrollIntoView({ behavior: 'smooth' });
+
+            // 先删除旧记录
+            if (confirm('将加载此记录到表单，原记录会被删除。确定继续吗？')) {
+                deleteRecord(recordId);
+            }
+        }
+
         // 渲染记录列表
         function renderRecords() {
             const container = document.getElementById('recordsList');
@@ -749,6 +773,7 @@
                             <td>${record.hours} 小时</td>
                             <td>
                                 <div class="actions">
+                                    <button class="btn btn-secondary" onclick="editRecord('${record.id}')">编辑</button>
                                     <button class="btn btn-danger" onclick="deleteRecord('${record.id}')">删除</button>
                                 </div>
                             </td>
