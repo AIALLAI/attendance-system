@@ -422,7 +422,19 @@
                 <div class="punch-form">
                     <div class="form-group">
                         <label for="userName">姓名</label>
-                        <input type="text" id="userName" placeholder="输入姓名" required>
+                        <select id="userName" required>
+                            <option value="">请选择</option>
+                            <option value="曾志龙">曾志龙</option>
+                            <option value="刘豪博">刘豪博</option>
+                            <option value="陈沛阳">陈沛阳</option>
+                            <option value="李昊">李昊</option>
+                            <option value="吕开朗">吕开朗</option>
+                            <option value="王济安">王济安</option>
+                            <option value="吴洁">吴洁</option>
+                            <option value="陈虹宇">陈虹宇</option>
+                            <option value="何睿">何睿</option>
+                            <option value="池购贤">池购贤</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="punchDate">日期</label>
@@ -655,6 +667,7 @@
             }
 
             // 清空表单
+            document.getElementById('userName').value = '';
             document.getElementById('checkIn').value = '';
             document.getElementById('checkOut').value = '';
             document.getElementById('isHoliday').checked = false;
@@ -786,9 +799,7 @@
                         <tr>
                             <th>姓名</th>
                             <th>日均工作时长</th>
-                            <th>工作日记录</th>
                             <th>节假日加班</th>
-                            <th>总记录数</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -800,14 +811,11 @@
                 const workdayCount = data.workdayRecords.length;
                 const avgHours = workdayCount > 0 ? workdayTotal / workdayCount : 0;
                 const holidayTotal = data.holidayRecords.reduce((sum, r) => sum + r.hours, 0);
-                const totalCount = workdayCount + data.holidayRecords.length;
 
                 return {
                     userName,
                     avgHours,
-                    workdayCount,
-                    holidayTotal,
-                    totalCount
+                    holidayTotal
                 };
             }).sort((a, b) => b.avgHours - a.avgHours);
 
@@ -817,9 +825,7 @@
                     <tr>
                         <td><strong>${stat.userName}</strong></td>
                         <td><span class="stat-highlight">${stat.avgHours.toFixed(2)}</span> <span class="stat-label">小时/天</span></td>
-                        <td>${stat.workdayCount} 天</td>
                         <td>${stat.holidayTotal.toFixed(1)} 小时</td>
-                        <td>${stat.totalCount} 条</td>
                     </tr>
                 `;
             });
