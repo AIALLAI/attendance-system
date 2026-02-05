@@ -298,6 +298,64 @@
             gap: 8px;
         }
 
+        /* 个人统计列表 */
+        .personal-stats-section {
+            margin-bottom: 24px;
+        }
+
+        .personal-stats-section h2 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .personal-stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .personal-stats-table th,
+        .personal-stats-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .personal-stats-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .personal-stats-table td {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .personal-stats-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .personal-stats-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .stat-highlight {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 13px;
+        }
+
         /* 响应式设计 */
         @media (max-width: 768px) {
             .main-content {
@@ -406,6 +464,14 @@
                     <h3>总打卡记录</h3>
                     <div class="value" id="totalRecords">0</div>
                     <div style="font-size: 14px; margin-top: 4px;">条记录</div>
+                </div>
+            </div>
+
+            <!-- 个人统计 -->
+            <div class="personal-stats-section">
+                <h2>👥 个人工作统计</h2>
+                <div id="personalStatsList">
+                    <div class="empty-state">暂无数据</div>
                 </div>
             </div>
 
@@ -687,6 +753,85 @@
             container.innerHTML = html;
         }
 
+        // 渲染个人统计列表
+        function renderPersonalStats() {
+            const container = document.getElementById('personalStatsList');
+            const allRecordsArray = Object.values(allRecords);
+
+            if (allRecordsArray.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无数据</div>';
+                return;
+            }
+
+            // 按用户分组统计
+            const userStats = {};
+            allRecordsArray.forEach(record => {
+                if (!userStats[record.userName]) {
+                    userStats[record.userName] = {
+                        workdayRecords: [],
+                        holidayRecords: []
+                    };
+                }
+                if (record.isHoliday) {
+                    userStats[record.userName].holidayRecords.push(record);
+                } else {
+                    userStats[record.userName].workdayRecords.push(record);
+                }
+            });
+
+            // 生成表格
+            let html = `
+                <table class="personal-stats-table">
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>日均工作时长</th>
+                            <th>工作日记录</th>
+                            <th>节假日加班</th>
+                            <th>总记录数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // 计算每个人的统计数据并排序（按日均工作时长降序）
+            const statsArray = Object.entries(userStats).map(([userName, data]) => {
+                const workdayTotal = data.workdayRecords.reduce((sum, r) => sum + r.hours, 0);
+                const workdayCount = data.workdayRecords.length;
+                const avgHours = workdayCount > 0 ? workdayTotal / workdayCount : 0;
+                const holidayTotal = data.holidayRecords.reduce((sum, r) => sum + r.hours, 0);
+                const totalCount = workdayCount + data.holidayRecords.length;
+
+                return {
+                    userName,
+                    avgHours,
+                    workdayCount,
+                    holidayTotal,
+                    totalCount
+                };
+            }).sort((a, b) => b.avgHours - a.avgHours);
+
+            // 渲染每一行
+            statsArray.forEach((stat, index) => {
+                html += `
+                    <tr>
+                        <td><strong>${stat.userName}</strong></td>
+                        <td><span class="stat-highlight">${stat.avgHours.toFixed(2)}</span> <span class="stat-label">小时/天</span></td>
+                        <td>${stat.workdayCount} 天</td>
+                        <td>${stat.holidayTotal.toFixed(1)} 小时</td>
+                        <td>${stat.totalCount} 条</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
         // 更新统计数据
         function updateStats() {
             const allRecordsArray = Object.values(allRecords);
@@ -721,6 +866,9 @@
             } else {
                 document.getElementById('teamAvgHours').textContent = '0.0';
             }
+
+            // 更新个人统计列表
+            renderPersonalStats();
         }
     </script>
 </body>
