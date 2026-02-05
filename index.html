@@ -437,15 +437,26 @@
         let app, database;
         let workingDays = [1, 2, 3, 4, 5]; // 默认周一到周五为工作日
         let allRecords = {};
+        let useLocalMode = false;
 
-        try {
-            app = firebase.initializeApp(firebaseConfig);
-            database = firebase.database();
-            document.getElementById('connectionStatus').textContent = '✓ 已连接';
-            initializeApp();
-        } catch (error) {
-            console.error('Firebase初始化失败:', error);
+        // 检查是否配置了Firebase
+        const isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
+
+        if (isFirebaseConfigured) {
+            try {
+                app = firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                document.getElementById('connectionStatus').textContent = '✓ 已连接';
+                initializeApp();
+            } catch (error) {
+                console.error('Firebase初始化失败:', error);
+                document.getElementById('connectionStatus').textContent = '⚠ Firebase连接失败（本地模式）';
+                useLocalMode = true;
+                initializeLocalMode();
+            }
+        } else {
             document.getElementById('connectionStatus').textContent = '⚠ 未配置数据库（本地模式）';
+            useLocalMode = true;
             initializeLocalMode();
         }
 
@@ -527,10 +538,10 @@
 
         // 保存工作日设置
         function saveWorkingDays() {
-            if (database) {
-                database.ref('settings/workingDays').set(workingDays);
-            } else {
+            if (useLocalMode) {
                 localStorage.setItem('workingDays', JSON.stringify(workingDays));
+            } else if (database) {
+                database.ref('settings/workingDays').set(workingDays);
             }
         }
 
@@ -567,14 +578,14 @@
                 timestamp: Date.now()
             };
 
-            if (database) {
-                database.ref('attendance').push(record);
-            } else {
+            if (useLocalMode) {
                 const id = 'record_' + Date.now();
                 allRecords[id] = record;
                 localStorage.setItem('attendanceData', JSON.stringify(allRecords));
                 renderRecords();
                 updateStats();
+            } else if (database) {
+                database.ref('attendance').push(record);
             }
 
             // 清空表单
@@ -588,13 +599,13 @@
         function deleteRecord(recordId) {
             if (!confirm('确定删除这条记录吗？')) return;
 
-            if (database) {
-                database.ref('attendance/' + recordId).remove();
-            } else {
+            if (useLocalMode) {
                 delete allRecords[recordId];
                 localStorage.setItem('attendanceData', JSON.stringify(allRecords));
                 renderRecords();
                 updateStats();
+            } else if (database) {
+                database.ref('attendance/' + recordId).remove();
             }
         }
 
