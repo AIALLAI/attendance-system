@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>团队打卡统计系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header .status {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 32px;
+        }
+
+        /* 打卡区域 */
+        .punch-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .punch-section h2 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .punch-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        /* 工作日设置 */
+        .settings-section {
+            background: #fff3cd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .settings-section h3 {
+            color: #856404;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .weekday-selector {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .weekday-btn {
+            padding: 8px 16px;
+            border: 2px solid #ffc107;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .weekday-btn.active {
+            background: #ffc107;
+            color: white;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card.orange {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-card.green {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        /* 记录列表 */
+        .records-section h2 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .user-records {
+            margin-bottom: 32px;
+        }
+
+        .user-header {
+            background: #667eea;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-stats {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+
+        .records-table th,
+        .records-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .records-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .records-table td {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .records-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .holiday-badge {
+            background: #ff6b6b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 16px;
+            }
+
+            .punch-form {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .records-table {
+                font-size: 12px;
+            }
+
+            .records-table th,
+            .records-table td {
+                padding: 8px;
+            }
+        }
+
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 团队打卡统计系统</h1>
+            <div class="status" id="connectionStatus">正在连接...</div>
+        </div>
+
+        <div class="main-content">
+            <!-- 工作日设置 -->
+            <div class="settings-section">
+                <h3>⚙️ 工作日设置</h3>
+                <div class="weekday-selector" id="weekdaySelector">
+                    <button class="weekday-btn active" data-day="1">周一</button>
+                    <button class="weekday-btn active" data-day="2">周二</button>
+                    <button class="weekday-btn active" data-day="3">周三</button>
+                    <button class="weekday-btn active" data-day="4">周四</button>
+                    <button class="weekday-btn active" data-day="5">周五</button>
+                    <button class="weekday-btn" data-day="6">周六</button>
+                    <button class="weekday-btn" data-day="0">周日</button>
+                </div>
+            </div>
+
+            <!-- 打卡区域 -->
+            <div class="punch-section">
+                <h2>⏰ 打卡记录</h2>
+                <div class="punch-form">
+                    <div class="form-group">
+                        <label for="userName">姓名</label>
+                        <input type="text" id="userName" placeholder="输入姓名" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="punchDate">日期</label>
+                        <input type="date" id="punchDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkIn">上班时间</label>
+                        <input type="time" id="checkIn" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkOut">下班时间</label>
+                        <input type="time" id="checkOut" required>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="isHoliday">
+                            <label for="isHoliday">节假日加班</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" onclick="addRecord()">添加打卡</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 统计数据 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>团队人均日工作时长</h3>
+                    <div class="value" id="teamAvgHours">0.0</div>
+                    <div style="font-size: 14px; margin-top: 4px;">小时/天</div>
+                </div>
+                <div class="stat-card orange">
+                    <h3>团队总节假日加班</h3>
+                    <div class="value" id="teamHolidayHours">0.0</div>
+                    <div style="font-size: 14px; margin-top: 4px;">小时</div>
+                </div>
+                <div class="stat-card green">
+                    <h3>总打卡记录</h3>
+                    <div class="value" id="totalRecords">0</div>
+                    <div style="font-size: 14px; margin-top: 4px;">条记录</div>
+                </div>
+            </div>
+
+            <!-- 记录列表 -->
+            <div class="records-section">
+                <h2>📋 打卡记录</h2>
+                <div id="recordsList" class="loading">正在加载数据...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase 配置 - 需要替换成你自己的配置
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // 初始化 Firebase
+        let app, database;
+        let workingDays = [1, 2, 3, 4, 5]; // 默认周一到周五为工作日
+        let allRecords = {};
+
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            document.getElementById('connectionStatus').textContent = '✓ 已连接';
+            initializeApp();
+        } catch (error) {
+            console.error('Firebase初始化失败:', error);
+            document.getElementById('connectionStatus').textContent = '⚠ 未配置数据库（本地模式）';
+            initializeLocalMode();
+        }
+
+        // 初始化应用
+        function initializeApp() {
+            // 设置当前日期
+            document.getElementById('punchDate').valueAsDate = new Date();
+
+            // 监听工作日设置
+            initWeekdaySelector();
+
+            // 监听打卡记录
+            database.ref('attendance').on('value', (snapshot) => {
+                allRecords = snapshot.val() || {};
+                renderRecords();
+                updateStats();
+            });
+
+            // 监听工作日设置
+            database.ref('settings/workingDays').on('value', (snapshot) => {
+                if (snapshot.val()) {
+                    workingDays = snapshot.val();
+                    updateWeekdayButtons();
+                }
+            });
+        }
+
+        // 本地模式初始化
+        function initializeLocalMode() {
+            document.getElementById('punchDate').valueAsDate = new Date();
+            initWeekdaySelector();
+
+            // 从本地存储加载数据
+            const localData = localStorage.getItem('attendanceData');
+            if (localData) {
+                allRecords = JSON.parse(localData);
+            }
+
+            const localWorkingDays = localStorage.getItem('workingDays');
+            if (localWorkingDays) {
+                workingDays = JSON.parse(localWorkingDays);
+            }
+
+            updateWeekdayButtons();
+            renderRecords();
+            updateStats();
+        }
+
+        // 初始化工作日选择器
+        function initWeekdaySelector() {
+            const buttons = document.querySelectorAll('.weekday-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const day = parseInt(btn.dataset.day);
+                    if (workingDays.includes(day)) {
+                        workingDays = workingDays.filter(d => d !== day);
+                        btn.classList.remove('active');
+                    } else {
+                        workingDays.push(day);
+                        btn.classList.add('active');
+                    }
+                    saveWorkingDays();
+                });
+            });
+        }
+
+        // 更新工作日按钮状态
+        function updateWeekdayButtons() {
+            const buttons = document.querySelectorAll('.weekday-btn');
+            buttons.forEach(btn => {
+                const day = parseInt(btn.dataset.day);
+                if (workingDays.includes(day)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // 保存工作日设置
+        function saveWorkingDays() {
+            if (database) {
+                database.ref('settings/workingDays').set(workingDays);
+            } else {
+                localStorage.setItem('workingDays', JSON.stringify(workingDays));
+            }
+        }
+
+        // 添加打卡记录
+        function addRecord() {
+            const userName = document.getElementById('userName').value.trim();
+            const punchDate = document.getElementById('punchDate').value;
+            const checkIn = document.getElementById('checkIn').value;
+            const checkOut = document.getElementById('checkOut').value;
+            const isHoliday = document.getElementById('isHoliday').checked;
+
+            if (!userName || !punchDate || !checkIn || !checkOut) {
+                alert('请填写完整信息！');
+                return;
+            }
+
+            // 计算工作时长
+            const checkInTime = new Date(`${punchDate} ${checkIn}`);
+            const checkOutTime = new Date(`${punchDate} ${checkOut}`);
+            const hours = (checkOutTime - checkInTime) / (1000 * 60 * 60);
+
+            if (hours <= 0) {
+                alert('下班时间必须晚于上班时间！');
+                return;
+            }
+
+            const record = {
+                userName,
+                date: punchDate,
+                checkIn,
+                checkOut,
+                hours: parseFloat(hours.toFixed(2)),
+                isHoliday,
+                timestamp: Date.now()
+            };
+
+            if (database) {
+                database.ref('attendance').push(record);
+            } else {
+                const id = 'record_' + Date.now();
+                allRecords[id] = record;
+                localStorage.setItem('attendanceData', JSON.stringify(allRecords));
+                renderRecords();
+                updateStats();
+            }
+
+            // 清空表单
+            document.getElementById('checkIn').value = '';
+            document.getElementById('checkOut').value = '';
+            document.getElementById('isHoliday').checked = false;
+            alert('打卡记录添加成功！');
+        }
+
+        // 删除记录
+        function deleteRecord(recordId) {
+            if (!confirm('确定删除这条记录吗？')) return;
+
+            if (database) {
+                database.ref('attendance/' + recordId).remove();
+            } else {
+                delete allRecords[recordId];
+                localStorage.setItem('attendanceData', JSON.stringify(allRecords));
+                renderRecords();
+                updateStats();
+            }
+        }
+
+        // 渲染记录列表
+        function renderRecords() {
+            const container = document.getElementById('recordsList');
+
+            if (Object.keys(allRecords).length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无打卡记录</div>';
+                return;
+            }
+
+            // 按用户分组
+            const userGroups = {};
+            Object.entries(allRecords).forEach(([id, record]) => {
+                if (!userGroups[record.userName]) {
+                    userGroups[record.userName] = [];
+                }
+                userGroups[record.userName].push({ id, ...record });
+            });
+
+            let html = '';
+            Object.entries(userGroups).forEach(([userName, records]) => {
+                // 计算个人统计
+                const workdayRecords = records.filter(r => !r.isHoliday);
+                const holidayRecords = records.filter(r => r.isHoliday);
+
+                const totalWorkHours = workdayRecords.reduce((sum, r) => sum + r.hours, 0);
+                const avgWorkHours = workdayRecords.length > 0 ? (totalWorkHours / workdayRecords.length).toFixed(2) : 0;
+                const totalHolidayHours = holidayRecords.reduce((sum, r) => sum + r.hours, 0).toFixed(2);
+
+                html += `
+                    <div class="user-records">
+                        <div class="user-header">
+                            <span>${userName}</span>
+                            <span class="user-stats">
+                                日均: ${avgWorkHours}小时 | 节假日: ${totalHolidayHours}小时 | 记录: ${records.length}条
+                            </span>
+                        </div>
+                        <table class="records-table">
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>上班时间</th>
+                                    <th>下班时间</th>
+                                    <th>工作时长</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                records.sort((a, b) => b.timestamp - a.timestamp).forEach(record => {
+                    html += `
+                        <tr>
+                            <td>
+                                ${record.date}
+                                ${record.isHoliday ? '<span class="holiday-badge">节假日</span>' : ''}
+                            </td>
+                            <td>${record.checkIn}</td>
+                            <td>${record.checkOut}</td>
+                            <td>${record.hours} 小时</td>
+                            <td>
+                                <div class="actions">
+                                    <button class="btn btn-danger" onclick="deleteRecord('${record.id}')">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            const allRecordsArray = Object.values(allRecords);
+
+            // 总记录数
+            document.getElementById('totalRecords').textContent = allRecordsArray.length;
+
+            // 团队总节假日加班时长
+            const totalHolidayHours = allRecordsArray
+                .filter(r => r.isHoliday)
+                .reduce((sum, r) => sum + r.hours, 0);
+            document.getElementById('teamHolidayHours').textContent = totalHolidayHours.toFixed(1);
+
+            // 团队人均日工作时长（不含节假日）
+            const workdayRecords = allRecordsArray.filter(r => !r.isHoliday);
+            if (workdayRecords.length > 0) {
+                // 按用户分组计算日均，再求平均
+                const userAvgs = {};
+                workdayRecords.forEach(record => {
+                    if (!userAvgs[record.userName]) {
+                        userAvgs[record.userName] = { total: 0, count: 0 };
+                    }
+                    userAvgs[record.userName].total += record.hours;
+                    userAvgs[record.userName].count += 1;
+                });
+
+                const avgHours = Object.values(userAvgs)
+                    .map(u => u.total / u.count)
+                    .reduce((sum, avg) => sum + avg, 0) / Object.keys(userAvgs).length;
+
+                document.getElementById('teamAvgHours').textContent = avgHours.toFixed(1);
+            } else {
+                document.getElementById('teamAvgHours').textContent = '0.0';
+            }
+        }
+    </script>
+</body>
+</html>
